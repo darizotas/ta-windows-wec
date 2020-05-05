@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "2.0.0", 
+  "info": {
+    "title": "Windows WEC Add-On", 
+    "id": {
+      "group": null, 
+      "name": "ta-windows-wec", 
+      "version": "1.0.0"
+    }, 
+    "author": [
+      {
+        "name": "darizotas@gmail.com", 
+        "email": null, 
+        "company": null
+      }
+    ], 
+    "releaseDate": null, 
+    "description": "Add-on to import Windows WEC subscription information", 
+    "classification": {
+      "intendedAudience": null, 
+      "categories": [], 
+      "developmentStatus": null
+    }, 
+    "commonInformationModels": null, 
+    "license": {
+      "name": null, 
+      "text": null, 
+      "uri": null
+    }, 
+    "privacyPolicy": {
+      "name": null, 
+      "text": null, 
+      "uri": null
+    }, 
+    "releaseNotes": {
+      "name": null, 
+      "text": "./README.txt", 
+      "uri": null
+    }
+  }, 
+  "dependencies": null, 
+  "tasks": null, 
+  "inputGroups": null, 
+  "incompatibleApps": null, 
+  "platformRequirements": {
+    "splunk": {
+      "Enterprise": ">=6.3.0"
+    }
+  }, 
+  "supportedDeployments": [
+    "_standalone", 
+    "_distributed"
+  ], 
+  "targetWorkloads": ["_indexers" | "_forwarders"]
+}
+# The following sections can be customized and added to the manifest. For detailed information,
+# see the documentation at http://dev.splunk.com/view/packaging-toolkit/SP-CAAAE9V
+#
+# Lists the app dependencies and version requirements
+# "dependencies": {
+#     "<app-group>:<app-name>": {
+#         "version": "*",
+#         "package": "<source-package-location>",
+#         "optional": [true|false]
+#     }
+# }
+#
+# Lists the inputs that belong on the search head rather than forwarders
+# "tasks": []
+#
+# Lists the possible input groups with app dependencies, and inputs that should be included
+# "inputGroups": {
+#     "<group-name>": {
+#         "requires": {
+#             "<app-group>:<app-name>": ["<dependent-input-groups>"]
+#         },
+#         "inputs": ["<defined-inputs>"]
+#     }
+# }
+#
+# Lists the app IDs that cannot be installed on the system alongside this app
+# "incompatibleApps": {
+#     "<app-group>:<app-name>": "<version>"
+# }
+#
+# Specify the platform version requirements for this app
+# "platformRequirements": {
+#     "splunk": {
+#         "Enterprise": "<version>"
+#     }
+# }
+#
+# Lists the supported deployment types this app can be installed on
+# "supportedDeployments": ["*" | "_standalone" | "_distributed" | "_search_head_clustering"]
+#
+# Lists the targets where app can be installed to
+# "targetWorkloads": ["*" | "_search_heads" | "_indexers" | "_forwarders"]
+#
