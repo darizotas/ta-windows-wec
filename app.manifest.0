@@ -42,16 +42,12 @@
   "tasks": null, 
   "inputGroups": null, 
   "incompatibleApps": null, 
-  "platformRequirements": {
-    "splunk": {
-      "Enterprise": ">=6.3.0"
-    }
-  }, 
+  "platformRequirements": null, 
   "supportedDeployments": [
     "_standalone", 
     "_distributed"
   ], 
-  "targetWorkloads": ["_indexers", "_forwarders"]
+  "targetWorkloads": null
 }
 # The following sections can be customized and added to the manifest. For detailed information,
 # see the documentation at http://dev.splunk.com/view/packaging-toolkit/SP-CAAAE9V
