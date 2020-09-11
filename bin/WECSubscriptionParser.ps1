@@ -53,6 +53,10 @@ class EventSource {
     [bool]IsComplete() {
         return $this.Address -and $this.Enabled
     }
+    
+    [string]ToString() {
+        return "Address: " + $this.Address + ", Enabled: " + $this.Enabled
+    }
 }
 
 <#
