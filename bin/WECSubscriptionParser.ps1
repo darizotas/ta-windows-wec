@@ -24,7 +24,7 @@ class EventSourceRuntimeStatus {
     }
 
     [bool]IsComplete() {
-        return $this.ComputerName -and $this.RunTimeStatus -and $this.LastError -and $this.LastHeartbeatTime
+        return $this.ComputerName -and $this.RunTimeStatus -and $this.LastError #-and $this.LastHeartbeatTime
     }
     
     [string]ToString() {

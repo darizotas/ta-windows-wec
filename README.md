@@ -40,7 +40,7 @@ And some statistics from the EventLog where the events are stored. From both, th
 - OldestEventTime: Time stamp of the oldest event in the log.
 - LogSize: Log size in Bytes.
 
-**Note:** The list of event sources would not be present in case of parsing the XML format. That is,
+**Note:** The list of event sources by default will not be included (see [event source splitting](#event-source-splitting)). As it would be the case of parsing the XML format. That is,
 
 ```
 wecutil gs SUBSCRIPTION_NAME /f:XML
@@ -66,7 +66,7 @@ The following fields are created:
 - LastError: last error value.
 - ErrorMessage: Error message (**note:** only in case of error)
 - ErrorTime: Timestamp of the error occurrence (**note:** only in case of error)
-- EventSources : list of event sources. Each event source contains the following fields: 
+- EventSources : list of event sources (**note:** see [event source splitting](#event-source-splitting)). Each event source contains the following fields: 
     - ComputerName : event source computer name.
     - RunTimeStatus : runtime status.
     - LastError: last error value.
@@ -85,7 +85,9 @@ That is, this add-on must be installed on the WEC server itself. It requires *we
 
 ### Configuration and troubleshooting
 
-The TA-windows-wec brings only one configuration item, that is related to logging. This setting is present in the configuration file *etc\default\ta-windows-wec_settings.conf*
+The TA-windows-wec brings only two configuration items that are present in the configuration file *etc\default\ta-windows-wec_settings.conf*
+
+#### Logging
 
 ```
     [logging]
@@ -102,6 +104,28 @@ index=_internal source=*ta-windows-wec*
 **Note:** the log is overwritten when it reaches 15MB size
 
 Said all that, you should check *splunk_ta-windows-wec.log and splunk-powershell.ps1.log*
+
+#### Event source splitting
+
+The list of event sources associated to a subscription can be enormous from just a few to thousands. This last makes the Splunk event very dense causing trouble to the browser to render the JSON array, think of arrays of thousands values for each event. But also, this can lead to easily reach the KV JSON event limit, and hence, truncate events. 
+
+For those reasons two settings have been added:
+
+- *rt_splitafter* indicates the number of event sources after which the Splunk event of the subscription runtime status will be splitted. By default is set to 70, that is, after 70 event sources, the Splunk event is splitted. Zero or negative value will not split the event sources, but may cause undesirable side effects when inspecting the Splunk events as aboved mentioned.
+- *sd_splitafter* indicates the number of event sources after which the Splunk event will be splitted. By default is a negative value, that means no event sources are included in the Splunk event of the subscription details. A zero value will not split the event sources, but may cause undesirable side effects when inspecting the Splunk events as aboved mentioned.
+
+```
+    [eventsource]
+    ; - Zero or negative integer value will not split the event sources. Warning! in case of having thousands of
+    ;   event sources the browser may have problems rendering the events, but also you may reach the KV JSON char limit.
+    ; - Positive integer value will split the event source into batches. 
+    rt_splitafter=70
+    ; - Negative integer value it will not include the event sources for the subscription details.
+    ; - Zero value will include and will not split the event sources. Warning! in case of having thousands of
+    ;   event sources the browser may have problems rendering the events, but also you may reach the KV JSON char limit.  
+    ; - Positive integer value will split the event sources into batches. 
+    sd_splitafter=-1
+```
 
 ## References
 
