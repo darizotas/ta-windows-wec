@@ -60,7 +60,7 @@ Get-WECSubscriptions | ConvertFrom-WECSubscriptionDetails -Verbose:$Verbose | Fo
     # Split the event according to sd_splitafter
     } else {
         for ($i = 0; $i -lt $_.EventSource.Count; $i+=$RangeSize) {
-            $End = $RangeSize + $i
+            $End = $RangeSize + $i - 1
             $Event | Add-Member -MemberType NoteProperty -Name EventSource -Value $_.EventSource[$i..$End] -Force -PassThru | `
                 ConvertTo-Json -Compress
         }

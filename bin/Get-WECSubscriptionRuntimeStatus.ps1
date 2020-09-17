@@ -44,7 +44,7 @@ Get-WECSubscriptions | ConvertFrom-WECSubscriptionRuntimeStatus -Verbose:$Verbos
     # Split the event according to rt_splitafter
     if ($RangeSize -gt 0) {
         for ($i = 0; $i -lt $_.EventSource.Count; $i+=$RangeSize) {
-            $End = $RangeSize + $i
+            $End = $RangeSize + $i - 1
             $Event | Add-Member -MemberType NoteProperty -Name EventSource -Value $_.EventSource[$i..$End] -Force -PassThru | `
                 ConvertTo-Json -Compress
         }
