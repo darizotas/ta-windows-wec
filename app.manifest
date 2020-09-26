@@ -5,12 +5,12 @@
     "id": {
       "group": null, 
       "name": "ta-windows-wec", 
-      "version": "1.0.0"
+      "version": "1.0.1"
     }, 
     "author": [
       {
-        "name": "darizotas@gmail.com", 
-        "email": null, 
+        "name": "Dario B.", 
+        "email": "darizotas@gmail.com", 
         "company": null
       }
     ], 

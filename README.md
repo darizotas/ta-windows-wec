@@ -32,7 +32,7 @@ And some statistics from the EventLog where the events are stored. From both, th
 - DeliveryMaxLatencyTime: Delivery max latency time (milliseconds)
 - HeartbeatInterval: Heartbeat interval (milliseconds)
 - AllowedSourceDomainComputers: SDDL ACL that contains the allowed computers to participate in the subscription
-- EventSource: list of computers (pairs: Address, Enabled) participating in the subscription
+- EventSource: list of computers (pairs: Address, Enabled) that can forward events to the event collector. This value is typically used for collector initated subscriptions. It can be used for source inititated subscriptions to disable the collection of events from a particular event source.
 - LogName: Log name where the events are saved.
 - EventPerSecond: Number of events per seconds (EPS).
 - TotalEvents: Total number of events.
@@ -46,10 +46,12 @@ And some statistics from the EventLog where the events are stored. From both, th
 wecutil gs SUBSCRIPTION_NAME /f:XML
 ```
 
+
 ### References
 
 - <https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/wecutil>
 - <https://www.ibm.com/support/pages/qradar-how-measure-eps-rate-microsoft-windows-host>
+- <https://docs.microsoft.com/en-us/windows/win32/api/evcoll/ne-evcoll-ec_subscription_property_id>
 
 ## Subscription runtime status
 
@@ -66,11 +68,16 @@ The following fields are created:
 - LastError: last error value.
 - ErrorMessage: Error message (**note:** only in case of error)
 - ErrorTime: Timestamp of the error occurrence (**note:** only in case of error)
-- EventSources : list of event sources (**note:** see [event source splitting](#event-source-splitting)). Each event source contains the following fields: 
+- EventSources : list of event sources (**note:** see [event source splitting](#event-source-splitting)). For collector initiated subscriptions, this list will be identical to the one in the subscription's configuration. For source initiated subscriptions, this list will be the set of event sources that collector has heard from in the last 30 days. Each event source contains the following fields: 
     - ComputerName : event source computer name.
     - RunTimeStatus : runtime status.
     - LastError: last error value.
     - LastHeartbeatTime : Time stamp with the last check-in.
+
+### References
+
+- <https://docs.microsoft.com/en-us/windows/win32/api/evcoll/ne-evcoll-ec_subscription_runtime_status_info_id>
+- <https://docs.microsoft.com/en-us/windows/win32/api/evcoll/ne-evcoll-ec_subscription_runtime_status_active_status>
 
 ## Install the TA-wecutil add-on for Splunk
 
