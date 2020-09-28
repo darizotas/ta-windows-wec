@@ -24,7 +24,12 @@ class EventSourceRuntimeStatus {
     }
 
     [bool]IsComplete() {
-        return $this.ComputerName -and $this.RunTimeStatus -and $this.LastError -and $this.LastHeartbeatTime
+        return $this.ComputerName -and $this.RunTimeStatus -and $this.LastError #-and $this.LastHeartbeatTime
+    }
+    
+    [string]ToString() {
+        return "Computer: " + $this.ComputerName + ", Runtime Status: " + $this.RunTimeStatus + `
+            ", LastError: " + $this.LastError + ", Heartbeat: " + $this.LastHeartbeatTime
     }
 }
 
@@ -47,6 +52,10 @@ class EventSource {
 
     [bool]IsComplete() {
         return $this.Address -and $this.Enabled
+    }
+    
+    [string]ToString() {
+        return "Address: " + $this.Address + ", Enabled: " + $this.Enabled
     }
 }
 
@@ -160,6 +169,7 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
                                     $RuntimeStatus.EventSource += $EventSource
                                 } else {
                                     "Skipping Event Source $EventSource" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                                    $SkippedEventSource++
                                 }
                                 $EventSource = $null
                             }
