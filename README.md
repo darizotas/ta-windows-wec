@@ -2,9 +2,9 @@
 
 This Add-on for Splunk ingests the output of the [wecutil](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/wecutil) command-line utility. Namely,
 
-- Subscriptions list
-- Subscription details and related event log statistics
-- Subscription runtime status
+- Subscriptions list.
+- Subscription details and related event log statistics.
+- Subscription runtime status.
 
 ## Subscriptions list
 
@@ -22,7 +22,7 @@ Subscription details are a combination of the output of the command:
 wecutil gs SUBSCRIPTION_NAME
 ```
 
-And some statistics from the EventLog where the events are stored. From both, the following fields are present in the details:
+And some statistics from the EventLog where the events are stored. From both, the following fields are present in the details (*sourcetype = windows:wec:subscription:details*):
 
 - Subscription: Subscription Id.
 - Enabled: True whether the subscription is enabled.
@@ -46,7 +46,6 @@ And some statistics from the EventLog where the events are stored. From both, th
 wecutil gs SUBSCRIPTION_NAME /f:XML
 ```
 
-
 ### References
 
 - <https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/wecutil>
@@ -61,7 +60,7 @@ It parses the output from the command:
 wecutil gr SUBSCRIPTION_NAME
 ```
 
-The following fields are created:
+The following fields are created (*sourcetype = windows:wec:subscription:runtime*):
 
 - Subscription : subscription name.
 - RunTimeStatus : runtime status.
@@ -92,7 +91,7 @@ That is, this add-on must be installed on the WEC server itself. It requires *we
 
 ### Configuration and troubleshooting
 
-The TA-windows-wec brings only two configuration items that are present in the configuration file *etc\default\ta-windows-wec_settings.conf*
+The TA-windows-wec brings only two configuration items that are present in the configuration file *etc\default\ta-windows-wec_settings.conf*.
 
 #### Logging
 
@@ -103,14 +102,14 @@ The TA-windows-wec brings only two configuration items that are present in the c
     log_level=NONE   
 ```
 
-The logs are generated to *var/log/splunk/splunk_ta-windows-wec.log* and therefore parsed by Splunk
+The logs are generated to *var/log/splunk/splunk_ta-windows-wec-details.log* and *var/log/splunk/splunk_ta-windows-wec-runtime.log* according to their sourcetype, and therefore parsed by Splunk.
 
 ```
 index=_internal source=*ta-windows-wec*
 ```
-**Note:** the log is overwritten when it reaches 15MB size
+**Note:** the log files are overwritten when they reach 150MB size.
 
-Said all that, you should check *splunk_ta-windows-wec.log and splunk-powershell.ps1.log*
+Said all that, you should check *splunk_ta-windows-wec-details.log, splunk_ta-windows-wec-runtime.log and splunk-powershell.ps1.log*.
 
 #### Event source splitting
 
@@ -148,3 +147,4 @@ For those reasons two settings have been added:
 ## TO DO List
 
 - Create a Splunk App to exploit this information.
+- Add pruning functionality for "old" event sources still present in the Registry 

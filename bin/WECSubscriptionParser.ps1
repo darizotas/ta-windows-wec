@@ -83,6 +83,9 @@ class EventSource {
 .PARAMETER Subscription
     List of subscription names to convert
 
+.PARAMETER LogFile
+    Path to the log file for verbose and error messages
+
 .EXAMPLE 
     ConvertFrom-WECSubscriptionRuntimeStatus -Subscription SUBSCRIPTION_NAME -Verbose
 
@@ -103,6 +106,9 @@ class EventSource {
 .EXAMPLE 
     @(SUBSRIPTION_1, SUBSCRIPTION_2) | ConvertFrom-WECSubscriptionRuntimeStatus -Verbose
 
+.EXAMPLE 
+    @(SUBSRIPTION_1, SUBSCRIPTION_2) | ConvertFrom-WECSubscriptionRuntimeStatus -LogFile "PATH\TO\LOGFILE" -Verbose
+
 .LINK
      https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/wecutil
     EventSourceRuntimeStatus
@@ -112,7 +118,11 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
     param(
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
         [ValidateNotNullOrEmpty()]
-        [string[]]$Subscription
+        [string[]]$Subscription,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$LogFile
     )
 
     BEGIN {
@@ -133,7 +143,7 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
             $IsSubscriptionProperty = $true
             $EventSource = $null
             
-            "Start parsing runtime status for subscription $s" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+            "Start parsing runtime status for subscription $s" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
             & wecutil gr $s | ForEach-Object {
                 if ($_ -match '^\s*([\w\.\-]+)\s*:?\s*(.*)\s*$') {
                     $Key = $($Matches.1).ToLower()
@@ -142,12 +152,12 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
                     if ($IsSubscriptionProperty) {
                         if ($Key -eq "eventsources") {
                              $IsSubscriptionProperty = $false
-                             "Start property $key" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                             "Start property $key" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                              # Subscription runtime status: "subscription", "runtimestatus", "lasterror"
                         } else {
-                            "Parsing property $Key : $Value" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                            "Parsing property $Key : $Value" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                             if ($RuntimeStatus.PSObject.Properties.name -match $Key) {
-                                "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                                "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                             }
                             $RuntimeStatus | Add-Member -MemberType NoteProperty -Name $Key -Value $Value -PassThru -Force | Out-Null
                         }
@@ -155,9 +165,9 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
                     } else {
                         # Event source runtime status: "runtimestatus", "lasterror", "lastheartbeattime"
                         if ($Value) {
-                            "Parsing Event Source property $Key : $Value" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                            "Parsing Event Source property $Key : $Value" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                             if ($EventSource.$Key) {
-                                "Event source property '$Key' overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                                "Event source property '$Key' overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                             }
                             $EventSource.$Key = $Value
                         # Computer name only
@@ -165,32 +175,32 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
                             # Event source parsed
                             if ($EventSource) {
                                 if ($EventSource.IsComplete()) {
-                                    "Event Source added" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                                    "Event Source added" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                                     $RuntimeStatus.EventSource += $EventSource
                                 } else {
-                                    "Skipping Event Source $EventSource" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                                    "Skipping Event Source $EventSource" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                                     $SkippedEventSource++
                                 }
                                 $EventSource = $null
                             }
 
-                            "Start parsing Event Source: $Key" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                            "Start parsing Event Source: $Key" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                             [EventSourceRuntimeStatus]$EventSource = [EventSourceRuntimeStatus]::new($Key)
                         }
                     }
                 # Let's warn about non empty lines...
                 } elseif ($_) {
-                    "Skipped line: $_"| Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    "Skipped line: $_"| Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                     $SkippedLine++
                 }
             }
             # Last lingering event source?
             if ($EventSource) {
                 if ($EventSource.IsComplete()) {
-                    "Event Source added" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                    "Event Source added" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                     $RuntimeStatus.EventSource += $EventSource
                 } else {
-                    "Skipping Event Source $($EventSource | out-string)" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    "Skipping Event Source $($EventSource | out-string)" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                     $SkippedEventSource++
                 }
                 $EventSource = $null
@@ -198,14 +208,14 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
             # Warnings
             if ($SkippedEventSource) {
                 "$SkippedEventSource malformed and skipped event sources! Please re-run the script in Verbose mode!" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
             if ($SkippedLine) {
                 "$SkippedLine skipped lines! Please re-run the script in Verbose mode!" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
 
-            "Elapsed time: $(New-Timespan $Start $(Get-Date))" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+            "Elapsed time: $(New-Timespan $Start $(Get-Date))" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
 
             # Return runtime status
             $RuntimeStatus
@@ -214,7 +224,7 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
     }
 
     END {
-        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
     }
 }
 
@@ -302,6 +312,9 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
 .PARAMETER Subscription
     List of subscription names to convert
 
+.PARAMETER LogFile
+    Path to the log file for verbose and error messages
+
 .EXAMPLE 
     ConvertFrom-WECSubscriptionDetails -Subscription SUBSCRIPTION_NAME -Verbose
 
@@ -341,6 +354,9 @@ function ConvertFrom-WECSubscriptionRuntimeStatus {
 .EXAMPLE 
     @(SUBSRIPTION_1, SUBSCRIPTION_2) | ConvertFrom-WECSubscriptionDetails -Verbose
 
+.EXAMPLE 
+    @(SUBSRIPTION_1, SUBSCRIPTION_2) | ConvertFrom-WECSubscriptionDetails -LogFile "PATH\TO\LOGFILE" -Verbose
+
 .LINK
      https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/wecutil
     https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/convertfrom-sddlstring
@@ -351,7 +367,11 @@ function ConvertFrom-WECSubscriptionDetails {
     param(
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
         [ValidateNotNullOrEmpty()]
-        [string[]]$Subscription
+        [string[]]$Subscription,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$LogFile
     )
 
     BEGIN {
@@ -375,7 +395,7 @@ function ConvertFrom-WECSubscriptionDetails {
             $IsEventSourceDetails = $false
             $EventSource = $null
 
-            "Start parsing details for subscription $s" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+            "Start parsing details for subscription $s" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
             & wecutil gs $s | ForEach-Object {
                 if ($_ -match '^\s*(\w+\s*(?:\w+|\[\d+\]))\s*:(.*)$') {
                     $Key = $($Matches.1).ToLower()
@@ -383,7 +403,7 @@ function ConvertFrom-WECSubscriptionDetails {
                     
                     # Translate SDDL
                     if ($Key -eq "allowedsourcedomaincomputers") {
-                        "Parsing Subscription property $Key : $Value" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Parsing Subscription property $Key : $Value" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         try {
                             $Sddl = ConvertFrom-SddlString -Sddl $Value
                         
@@ -393,7 +413,7 @@ function ConvertFrom-WECSubscriptionDetails {
                                 SACL = ($Sddl.SystemAcl | Out-String)
                             }
                         } catch {
-                            "$_" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                            "$_" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                             $AllowedComputers = [PSCustomObject]@{
                                 SDDL = $Value
                                 DACL = ""
@@ -402,40 +422,40 @@ function ConvertFrom-WECSubscriptionDetails {
                         }
 
                         if ($SubscriptionDetails.PSObject.Properties.name -match $Key) {
-                            "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                            "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                         }
                         $SubscriptionDetails | Add-Member -MemberType NoteProperty -Name $Key -Value $AllowedComputers -PassThru -Force | Out-Null
                     # Query property starts!
                     } elseif ($Key -eq "query") {
-                        "Start property $Key" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Start property $Key" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         $IsQueryDetails = $true
                     # Event source starts!
                     } elseif ($Key.StartsWith("eventsource")) {
                         if ($EventSource) {
                             if ($EventSource.IsComplete()) {
-                                "Event Source added" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                                "Event Source added" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                                 $SubscriptionDetails.EventSource += $EventSource
                             } else {
-                                "Skipping Event Source $EventSource" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                                "Skipping Event Source $EventSource" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                                 $SkippedEventSource++
                             }
                             $EventSource = $null
                         }
-                        "Start property $Key" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Start property $Key" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         $IsEventSourceDetails = $true
                         [EventSource]$EventSource = [EventSource]::new()
                     # Event source parsing
                     } elseif ($IsEventSourceDetails) {
-                        "Parsing Event Source property $Key : $Value" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Parsing Event Source property $Key : $Value" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         if ($EventSource.$Key) {
-                            "Event source property $Key overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                            "Event source property $Key overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                         }
                         $EventSource.$Key = $Value
                     # Subscription property
                     } else {
-                        "Parsing Subscription property $Key : $Value" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Parsing Subscription property $Key : $Value" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         if ($SubscriptionDetails.PSObject.Properties.name -match $Key) {
-                            "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                            "Subscription property '$Key' overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                         }
                         $SubscriptionDetails | Add-Member -MemberType NoteProperty -Name $Key -Value $Value -PassThru -Force | Out-Null
                     }
@@ -444,9 +464,9 @@ function ConvertFrom-WECSubscriptionDetails {
                     $QueryList += $_
                     # Finished parsing Query property
                     if ($_ -ilike "*</QueryList>*") {
-                        "Query property parsed: $QueryList" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                        "Query property parsed: $QueryList" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                         if ($SubscriptionDetails.PSObject.Properties.name -match "query") {
-                            "Subscription property 'query' overwritten!" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                            "Subscription property 'query' overwritten!" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                         }
                         $SubscriptionDetails | Add-Member -MemberType NoteProperty -Name "query" -Value $QueryList -PassThru -Force | Out-Null
                         $IsQueryDetails = $false
@@ -454,17 +474,17 @@ function ConvertFrom-WECSubscriptionDetails {
                     }
                 # Let's warn about non empty lines...
                 } elseif ($_) {
-                    "Skipped line: $_" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    "Skipped line: $_" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                     $SkippedLine++
                 }
             }
 
             if ($EventSource) {
                 if ($EventSource.IsComplete()) {
-                    "Event Source added" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                    "Event Source added" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                     $SubscriptionDetails.EventSource += $EventSource
                 } else {
-                    "Skipping Event Source $EventSource" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    "Skipping Event Source $EventSource" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
                     $SkippedEventSource++
                 }
                 $EventSource = $null
@@ -473,13 +493,13 @@ function ConvertFrom-WECSubscriptionDetails {
             # Warnings
             if ($SkippedEventSource) {
                 "$SkippedEventSource malformed and skipped event sources! Please re-run the script in Verbose mode!" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
             if ($SkippedLine) {
                 "$SkippedLine skipped lines! Please re-run the script in Verbose mode!" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
-            "Elapsed time: $(New-Timespan $Start $(Get-Date))" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+            "Elapsed time: $(New-Timespan $Start $(Get-Date))" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
 
             # Return subscription details
             $SubscriptionDetails
@@ -487,7 +507,7 @@ function ConvertFrom-WECSubscriptionDetails {
     }
 
     END {
-        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
     }
 }
 
@@ -530,10 +550,16 @@ function Get-WECSubscriptions {
     The idea has been taken from QRadar github repo.
 
 .PARAMETER LogName
-    List of log names.
+    List of EventLog names.
+
+.PARAMETER LogFile
+    Path to the log file for verbose and error messages
 
 .EXAMPLE 
     @("Application", "System") | Get-WECEventLogStats
+
+.EXAMPLE 
+    @("Application", "System") | Get-WECEventLogStats -LogFile "PATH\TO\LOGFILE"
 
 .LINK
     https://www.ibm.com/support/pages/qradar-how-measure-eps-rate-microsoft-windows-host
@@ -544,7 +570,11 @@ function Get-WECEventLogStats {
     param(
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
         [ValidateNotNullOrEmpty()]
-        [string[]]$LogName
+        [string[]]$LogName,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$LogFile
     )
 
     BEGIN {
@@ -561,7 +591,7 @@ function Get-WECEventLogStats {
             } else {
                 $OldestEventTime = Get-Date -Date "01/01/1970"
                 "No events were found in $ln. Oldest event time set to 01-01-1970" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
             # Newest event time
             $NewestEvent = Get-WinEvent $ln -maxevents 1 -ErrorAction Ignore
@@ -570,7 +600,7 @@ function Get-WECEventLogStats {
             } else {
                 $NewestEventTime = Get-Date -Date "01/01/1970"
                 "No events were found in $ln. Newest event time set to 01-01-1970" | `
-                    Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                    Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
             # EventLog size and total num of events
             $EventLog = Get-WinEvent -ListLog $ln -ErrorAction Ignore
@@ -580,7 +610,7 @@ function Get-WECEventLogStats {
             } else {
                 $TotalLogEvents = 0
                 $LogSize = 0
-                "EventLog $ln does not exist" | Write-WECUtilLog -Level Warn -Function $MyInvocation.MyCommand.Name
+                "EventLog $ln does not exist" | Write-WECUtilLog -Path $LogFile -Level Warn -Function $MyInvocation.MyCommand.Name
             }
             # Events per second
             $TotalTime = (Get-Date).Subtract($OldestEventTime).TotalSeconds
@@ -598,6 +628,6 @@ function Get-WECEventLogStats {
     }
 
     END {
-        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+        "Total elapsed time: $(New-Timespan $TotalStart $(Get-Date))" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose 
     }
 }
