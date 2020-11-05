@@ -22,9 +22,13 @@ if ($Setting) {
     }
 }
 
+# Creates/Rotates the log file
+$LogFile = "$SplunkHome\var\log\splunk\splunk_ta-windows-wec-details.log"
+New-WECUtilLogFile -Path $LogFile
+
 $Timestamp = [DateTime]::UtcNow.ToString('u')
-Get-WECSubscriptions | ConvertFrom-WECSubscriptionDetails -Verbose:$Verbose | Foreach-Object {
-    $EventLogStats = $_.LogFile | Get-WECEventLogStats -Verbose:$Verbose
+Get-WECSubscriptions | ConvertFrom-WECSubscriptionDetails -LogFile $LogFile -Verbose:$Verbose | Foreach-Object {
+    $EventLogStats = $_.LogFile | Get-WECEventLogStats -LogFile $LogFile -Verbose:$Verbose
 
     # This only happens on "custom" configuration mode
     $MaxItems = '-'

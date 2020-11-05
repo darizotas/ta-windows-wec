@@ -25,8 +25,12 @@ if ($Setting) {
     }
 }
 
+# Creates/Rotates the log file
+$LogFile = "$SplunkHome\var\log\splunk\splunk_ta-windows-wec-runtime.log"
+New-WECUtilLogFile -Path $LogFile
+
 $Timestamp = [DateTime]::UtcNow.ToString('u')
-Get-WECSubscriptions | ConvertFrom-WECSubscriptionRuntimeStatus -Verbose:$Verbose | Foreach-Object { 
+Get-WECSubscriptions | ConvertFrom-WECSubscriptionRuntimeStatus -LogFile $LogFile -Verbose:$Verbose | Foreach-Object { 
     $Event = [PSCustomObject]@{
         Timestamp = $Timestamp
         Subscription = $_.subscription
