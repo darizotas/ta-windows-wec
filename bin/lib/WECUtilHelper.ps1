@@ -306,3 +306,32 @@ function Write-WECUtilLog {
         }         
     }
 }
+
+
+<#
+.SYNOPSIS
+    Converts from FILETIME to DateTime.
+.DESCRIPTION
+    Converts from FILETIME to DateTime.
+
+.PARAMETER FileTime
+    FILETIME timestamp to convert
+
+.LINK
+    https://social.technet.microsoft.com/Forums/windowsserver/en-US/b430ac7d-668b-4be8-87bf-2bd9e6faf3d4/to-convert-regbinary-to-date?forum=winserverpowershell
+    https://blogs.msdn.microsoft.com/sergey_babkins_blog/2015/02/20/time-conversions-in-powershell-and-net-in-general/
+#>
+function ConvertFrom-FileTime {
+    param(
+        [Parameter(Mandatory=$true)]
+        $FileTime
+    )
+
+    # Windows 64bit FileTime stored in little-endian
+    $TimeUtc = 0
+    if ($FileTime) {
+        $TimeUtc = (((((($FileTime[7]*256 + $FileTime[6])*256 + $FileTime[5])*256 + $FileTime[4])*256 + $FileTime[3])*256 + $FileTime[2])*256 + $FileTime[1])*256 + $FileTime[0]
+    } 
+
+    [DateTime]::FromFileTime($TimeUtc)
+}

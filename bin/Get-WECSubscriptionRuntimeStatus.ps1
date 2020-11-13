@@ -1,4 +1,4 @@
-. "$PSScriptRoot\WECSubscriptionParser.ps1"
+. "$PSScriptRoot\lib\WECSubscriptionParser.ps1"
 
 # https://docs.splunk.com/Documentation/Splunk/8.0.2/SearchReference/Commontimeformatvariables
 # https://answers.splunk.com/answers/5357/what-is-the-best-timestamp-format-to-use-for-my-custom-log-to-be-indexed-by-splunk.html
