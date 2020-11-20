@@ -28,6 +28,9 @@
 .PARAMETER LogFile
     Path to the log file for verbose and error messages
 
+.PARAMETER ReportOnly
+    If true, it does not remove the event source from the registry.
+
 .LINK
      https://github.com/MicrosoftDocs/windows-itpro-docs/issues/2599
     https://community.softwaregrp.com/dcvta86296/attachments/dcvta86296/arcsight-discussions/24729/1/Protect2015-WindowsEventForwarding.pdf
@@ -41,7 +44,10 @@ function Remove-WECOldEventSourceFromRegistry {
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string]$LogFile
+        [string]$LogFile,
+
+        [Parameter()]
+        [switch]$ReportOnly
     )
 
     # Global vars
@@ -80,9 +86,11 @@ function Remove-WECOldEventSourceFromRegistry {
             # Prune event source if no heartbeat time or if it is too old
             if (!$TimeUtc -or ($DateLimit -gt $TimeUtc)) {
                 try {
-                    Remove-Item -Path "$WECRegistryKey\$SubscriptionName\EventSources\$ComputerName" -Force -ErrorAction Stop
+                    if (!$ReportOnly) {
+                        Remove-Item -Path "$WECRegistryKey\$SubscriptionName\EventSources\$ComputerName" -Force -ErrorAction Stop
+                    }
 
-                    "Event Source: $ComputerName removed" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
+                    "Event Source: $ComputerName removed (Report only: $ReportOnly)" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                     $Removed++  
                     $SubscriptionPruneDetails.EventSource += [PSCustomObject]@{
                         ComputerName = $ComputerName
