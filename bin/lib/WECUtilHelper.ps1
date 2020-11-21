@@ -132,10 +132,10 @@ function Get-WECUtilSettings {
         [string]$FileName = "ta-windows-wec_settings.conf" 
     )  
 
-    if (Test-Path "$PSScriptRoot\..\local\$FileName") {
-        Get-IniContent "$PSScriptRoot\..\local\$FileName"
-    } elseif (Test-Path "$PSScriptRoot\..\default\$FileName") {
-        Get-IniContent "$PSScriptRoot\..\default\$FileName"
+    if (Test-Path "$PSScriptRoot\..\..\local\$FileName") {
+        Get-IniContent "$PSScriptRoot\..\..\local\$FileName"
+    } elseif (Test-Path "$PSScriptRoot\..\..\default\$FileName") {
+        Get-IniContent "$PSScriptRoot\..\..\default\$FileName"
     } else {
         $null
     }
