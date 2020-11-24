@@ -92,9 +92,14 @@ function Remove-WECOldEventSourceFromRegistry {
 
                     "Event Source: $ComputerName removed (Report only: $ReportOnly)" | Write-WECUtilLog -Path $LogFile -Function $MyInvocation.MyCommand.Name -Verbose:$Verbose
                     $Removed++  
+                    # Last heartbeat time string representation
+                    $LastHeartbeatTime = $null
+                    if ($TimeUtc) {
+                        $LastHeartbeatTime = $TimeUtc.toString('s')
+                    }
                     $SubscriptionPruneDetails.EventSource += [PSCustomObject]@{
                         ComputerName = $ComputerName
-                        LastHeartBeatTime = $TimeUtc.toString('s')
+                        LastHeartbeatTime = $LastHeartbeatTime
                     }
                 } catch {
                     # Error
