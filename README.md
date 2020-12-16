@@ -129,14 +129,14 @@ The TA-windows-wec brings only two configuration items that are present in the c
     log_level=NONE   
 ```
 
-The logs are generated to *var/log/splunk/splunk_ta-windows-wec-details.log*,  *var/log/splunk/splunk_ta-windows-wec-runtime.log*  and *var/log/splunk/splunk_ta-windows-wec-registry.log* according to their sourcetype, and therefore parsed by Splunk.
+The logs are generated to *var/log/splunk/splunk_ta-windows-wec-details.log*,  *var/log/splunk/splunk_ta-windows-wec-runtime.log*  and *var/log/splunk/splunk_ta-windows-wec-prune-registry.log* according to their sourcetype, and therefore parsed by Splunk.
 
 ```
 index=_internal source=*ta-windows-wec*
 ```
 **Note:** the log files are overwritten when they reach 150MB size.
 
-Said all that, you should check *splunk_ta-windows-wec-details.log, splunk_ta-windows-wec-runtime.log, splunk_ta-windows-wec-registry.log and splunk-powershell.ps1.log*.
+Said all that, you should check *splunk_ta-windows-wec-details.log, splunk_ta-windows-wec-runtime.log, splunk_ta-windows-wec-prune-registry.log and splunk-powershell.ps1.log*.
 
 #### Event source splitting
 
